@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 
-# Log file
-LOG_FILE="/var/log/setup_check.log"
+# Log file - changed from /var/log to /app/logs
+LOG_FILE="/app/logs/setup_check.log"
+
+# Make sure the directory exists
+mkdir -p /app/logs
 
 # Function to log to both stdout and file
 log() {

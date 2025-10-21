@@ -9,14 +9,16 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Clone the repository
-ARG GITHUB_REPO=https://github.com/pdmthorsrud/accountability_buddy.git
-RUN git clone ${GITHUB_REPO} . || echo "Using local files"
+# Accept GitHub token as build argument
+ARG GITHUB_TOKEN
+ARG GITHUB_REPO=pdmthorsrud/accountability_buddy
 
-# Copy local files if they exist (for building from local directory)
-COPY requirements.txt ./
-COPY *.py ./
-COPY setup.sh ./
+# Clone the repository using token if provided
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+        git clone https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git . ; \
+    else \
+        git clone https://github.com/${GITHUB_REPO}.git . ; \
+    fi
 
 # Make setup script executable
 RUN chmod +x setup.sh

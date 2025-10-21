@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   accountability-buddy:
-    build: .
+    build:
+      context: .
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
     container_name: accountability-buddy
     restart: unless-stopped
 

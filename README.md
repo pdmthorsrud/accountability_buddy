@@ -95,19 +95,30 @@ The easiest way to run this project is using Docker Compose. This automatically 
 
 ### Quick Start with Docker
 
-1. **Clone the repository**:
+1. **Create a GitHub Personal Access Token** (for private repo access):
+   - Go to https://github.com/settings/tokens
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Give it a name like "Accountability Buddy Docker"
+   - Select scope: `repo` (Full control of private repositories)
+   - Click "Generate token" and copy it
+
+2. **Clone the repository** (or pull it via Docker):
 ```bash
 git clone https://github.com/pdmthorsrud/accountability_buddy.git
 cd accountability_buddy
 ```
 
-2. **Create environment file**:
+3. **Create environment file**:
 ```bash
 cp .env.docker .env
 ```
 
 Edit `.env` and fill in your actual values:
 ```bash
+# GitHub token for private repo access
+GITHUB_TOKEN=ghp_your_github_token_here
+
+# Vapi configuration
 VAPI_API_TOKEN=your_actual_token
 MORNING_ASSISTANT_ID=your_morning_assistant_id
 EVENING_ASSISTANT_ID=your_evening_assistant_id
@@ -122,12 +133,12 @@ EVENING_CALL_TIME=0 20 * * *   # 8:00 PM
 TZ=Europe/Oslo
 ```
 
-3. **Start the container**:
+4. **Start the container**:
 ```bash
 docker-compose up -d
 ```
 
-4. **View logs**:
+5. **View logs**:
 ```bash
 # Container logs
 docker-compose logs -f
@@ -137,7 +148,7 @@ tail -f logs/morning_call.log
 tail -f logs/evening_call.log
 ```
 
-5. **Stop the container**:
+6. **Stop the container**:
 ```bash
 docker-compose down
 ```

@@ -2,77 +2,99 @@
 set -e
 
 echo "=================================================="
-echo "Accountability Buddy - Container Setup"
+echo "Accountability Buddy - Environment Variable Check"
+echo "=================================================="
+echo ""
+
+echo "GitHub Configuration:"
+echo "  GITHUB_TOKEN: ${GITHUB_TOKEN:0:10}... (${#GITHUB_TOKEN} chars total)"
+echo "  GITHUB_REPO: ${GITHUB_REPO}"
+echo ""
+
+echo "Vapi API Configuration:"
+echo "  VAPI_API_TOKEN: ${VAPI_API_TOKEN:0:10}... (${#VAPI_API_TOKEN} chars total)"
+echo ""
+
+echo "Assistant IDs:"
+echo "  MORNING_ASSISTANT_ID: ${MORNING_ASSISTANT_ID}"
+echo "  EVENING_ASSISTANT_ID: ${EVENING_ASSISTANT_ID}"
+echo ""
+
+echo "Phone Configuration:"
+echo "  PHONE_NUMBER_ID: ${PHONE_NUMBER_ID}"
+echo "  TARGET_PHONE_NUMBER: ${TARGET_PHONE_NUMBER}"
+echo ""
+
+echo "Call Schedule:"
+echo "  MORNING_CALL_TIME: ${MORNING_CALL_TIME}"
+echo "  EVENING_CALL_TIME: ${EVENING_CALL_TIME}"
+echo ""
+
+echo "Timezone:"
+echo "  TZ: ${TZ}"
+echo ""
+
+echo "=================================================="
+echo "Checking for missing required variables..."
 echo "=================================================="
 
-# Validate required environment variables
-if [ -z "$VAPI_API_TOKEN" ] || [ -z "$MORNING_ASSISTANT_ID" ] || [ -z "$EVENING_ASSISTANT_ID" ] || [ -z "$PHONE_NUMBER_ID" ] || [ -z "$TARGET_PHONE_NUMBER" ]; then
-    echo "ERROR: Missing required environment variables!"
-    echo "Please ensure all required environment variables are set:"
-    echo "  - VAPI_API_TOKEN"
-    echo "  - MORNING_ASSISTANT_ID"
-    echo "  - EVENING_ASSISTANT_ID"
-    echo "  - PHONE_NUMBER_ID"
-    echo "  - TARGET_PHONE_NUMBER"
-    exit 1
+MISSING=0
+
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo "❌ GITHUB_TOKEN is not set!"
+    MISSING=1
+else
+    echo "✓ GITHUB_TOKEN is set"
 fi
 
-echo "✓ Environment variables validated"
+if [ -z "$VAPI_API_TOKEN" ]; then
+    echo "❌ VAPI_API_TOKEN is not set!"
+    MISSING=1
+else
+    echo "✓ VAPI_API_TOKEN is set"
+fi
 
-# Install Python dependencies
-echo "Installing Python dependencies..."
-pip install --no-cache-dir -r /app/requirements.txt
-echo "✓ Python dependencies installed"
+if [ -z "$MORNING_ASSISTANT_ID" ]; then
+    echo "❌ MORNING_ASSISTANT_ID is not set!"
+    MISSING=1
+else
+    echo "✓ MORNING_ASSISTANT_ID is set"
+fi
 
-# Set default times if not provided
-MORNING_CALL_TIME="${MORNING_CALL_TIME:-0 8 * * *}"
-EVENING_CALL_TIME="${EVENING_CALL_TIME:-0 20 * * *}"
+if [ -z "$EVENING_ASSISTANT_ID" ]; then
+    echo "❌ EVENING_ASSISTANT_ID is not set!"
+    MISSING=1
+else
+    echo "✓ EVENING_ASSISTANT_ID is set"
+fi
 
-echo "Setting up cron jobs..."
-echo "  Morning call: $MORNING_CALL_TIME"
-echo "  Evening call: $EVENING_CALL_TIME"
+if [ -z "$PHONE_NUMBER_ID" ]; then
+    echo "❌ PHONE_NUMBER_ID is not set!"
+    MISSING=1
+else
+    echo "✓ PHONE_NUMBER_ID is set"
+fi
 
-# Create cron jobs
-cat > /etc/cron.d/accountability-buddy << EOF
-# Accountability Buddy Cron Jobs
-VAPI_API_TOKEN=$VAPI_API_TOKEN
-MORNING_ASSISTANT_ID=$MORNING_ASSISTANT_ID
-EVENING_ASSISTANT_ID=$EVENING_ASSISTANT_ID
-PHONE_NUMBER_ID=$PHONE_NUMBER_ID
-TARGET_PHONE_NUMBER=$TARGET_PHONE_NUMBER
+if [ -z "$TARGET_PHONE_NUMBER" ]; then
+    echo "❌ TARGET_PHONE_NUMBER is not set!"
+    MISSING=1
+else
+    echo "✓ TARGET_PHONE_NUMBER is set"
+fi
 
-# Morning call
-$MORNING_CALL_TIME root cd /app && python make_morning_call.py >> /var/log/morning_call.log 2>&1
-
-# Evening call
-$EVENING_CALL_TIME root cd /app && python make_evening_call.py >> /var/log/evening_call.log 2>&1
-EOF
-
-# Set proper permissions for cron file
-chmod 0644 /etc/cron.d/accountability-buddy
-
-# Create log files
-touch /var/log/morning_call.log /var/log/evening_call.log
-chmod 0666 /var/log/morning_call.log /var/log/evening_call.log
-
-echo "✓ Cron jobs configured"
-
-# Apply cron jobs
-crontab /etc/cron.d/accountability-buddy
-echo "✓ Crontab installed"
-
-echo "=================================================="
-echo "Setup complete!"
-echo "=================================================="
-echo "Cron schedule:"
-echo "  Morning: $MORNING_CALL_TIME"
-echo "  Evening: $EVENING_CALL_TIME"
 echo ""
-echo "Logs available at:"
-echo "  /var/log/morning_call.log"
-echo "  /var/log/evening_call.log"
-echo "=================================================="
-
-# Start cron in foreground
-echo "Starting cron service..."
-exec cron -f
+if [ $MISSING -eq 0 ]; then
+    echo "=================================================="
+    echo "✓ All required environment variables are set!"
+    echo "=================================================="
+    echo ""
+    echo "Container will stay running for 10 minutes for you to check logs..."
+    echo "Press Ctrl+C to exit early, or wait for auto-shutdown."
+    sleep 600
+else
+    echo "=================================================="
+    echo "❌ Some required variables are missing!"
+    echo "Please check your .env file and try again."
+    echo "=================================================="
+    exit 1
+fi

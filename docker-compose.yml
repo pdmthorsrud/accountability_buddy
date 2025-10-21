@@ -37,7 +37,7 @@ services:
     command: >
       bash -c "
         set -e
-        apt-get update && apt-get install -y --no-install-recommends git &&
+        apt-get update && apt-get install -y --no-install-recommends git cron &&
         cd /app &&
         git clone https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git &&
         cd $(basename \"$${GITHUB_REPO}\") &&

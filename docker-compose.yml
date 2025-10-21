@@ -32,11 +32,11 @@ services:
 
     volumes:
       # Optional: Mount logs directory to access logs from host
-      - ./logs:/var/log
+      - ./logs:/app/logs
 
     command: >
       bash -c "
-        apt-get update && apt-get install -y cron git &&
+        apt-get update && apt-get install -y --no-install-recommends cron git &&
         cd /app &&
         git clone https://\$${GITHUB_TOKEN}@github.com/\$${GITHUB_REPO}.git . &&
         chmod +x setup.sh &&

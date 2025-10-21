@@ -38,7 +38,7 @@ services:
       bash -c "
         apt-get update && apt-get install -y --no-install-recommends git &&
         cd /app &&
-        git clone https://\$${GITHUB_TOKEN}@github.com/\$${GITHUB_REPO}.git . &&
+        git clone https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git . &&
         chmod +x setup.sh &&
         ./setup.sh
       "

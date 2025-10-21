@@ -40,7 +40,6 @@ services:
         apt-get update && apt-get install -y --no-install-recommends git &&
         cd /app &&
         REPO_NAME=$(basename \"$${GITHUB_REPO}\") &&
-        if [ -d \"$REPO_NAME\" ]; then rm -rf \"$REPO_NAME\"; fi &&
         git clone https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git &&
         cd \"$REPO_NAME\" &&
         chmod +x setup.sh &&

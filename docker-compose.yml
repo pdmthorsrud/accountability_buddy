@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  accountability-buddy:
+    build: .
+    container_name: accountability-buddy
+    restart: unless-stopped
+
+    environment:
+      # Required: Vapi API Configuration
+      - VAPI_API_TOKEN=${VAPI_API_TOKEN}
+
+      # Required: Assistant IDs
+      - MORNING_ASSISTANT_ID=${MORNING_ASSISTANT_ID}
+      - EVENING_ASSISTANT_ID=${EVENING_ASSISTANT_ID}
+
+      # Required: Phone Configuration
+      - PHONE_NUMBER_ID=${PHONE_NUMBER_ID}
+      - TARGET_PHONE_NUMBER=${TARGET_PHONE_NUMBER}
+
+      # Optional: Customize call times (cron format)
+      # Default: Morning at 8:00 AM, Evening at 8:00 PM
+      - MORNING_CALL_TIME=${MORNING_CALL_TIME:-0 8 * * *}
+      - EVENING_CALL_TIME=${EVENING_CALL_TIME:-0 20 * * *}
+
+    volumes:
+      # Optional: Mount logs directory to access logs from host
+      - ./logs:/var/log
+
+    # Set timezone (optional, adjust to your timezone)
+    environment:
+      - TZ=${TZ:-America/New_York}

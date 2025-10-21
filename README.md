@@ -89,33 +89,88 @@ Automatically:
 python make_evening_call.py
 ```
 
-## Docker Deployment
+## Docker Deployment (Recommended)
 
-For deployment on Unraid or other container platforms:
+The easiest way to run this project is using Docker Compose. This automatically sets up everything including cron jobs.
 
-```dockerfile
-FROM python:3.9-slim
+### Quick Start with Docker
 
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY *.py .
-
-# Set environment variables in your container configuration
-ENV VAPI_API_TOKEN=""
-ENV MORNING_ASSISTANT_ID=""
-ENV EVENING_ASSISTANT_ID=""
-ENV PHONE_NUMBER_ID=""
-ENV TARGET_PHONE_NUMBER=""
-
-CMD ["python", "make_morning_call.py"]
+1. **Clone the repository**:
+```bash
+git clone https://github.com/pdmthorsrud/accountability_buddy.git
+cd accountability_buddy
 ```
 
-## Scheduling
+2. **Create environment file**:
+```bash
+cp .env.docker .env
+```
 
-Use cron or your container scheduler to run calls at specific times:
+Edit `.env` and fill in your actual values:
+```bash
+VAPI_API_TOKEN=your_actual_token
+MORNING_ASSISTANT_ID=your_morning_assistant_id
+EVENING_ASSISTANT_ID=your_evening_assistant_id
+PHONE_NUMBER_ID=your_phone_number_id
+TARGET_PHONE_NUMBER=+1234567890
+
+# Optional: Customize call times (cron format)
+MORNING_CALL_TIME=0 8 * * *    # 8:00 AM
+EVENING_CALL_TIME=0 20 * * *   # 8:00 PM
+
+# Optional: Set your timezone
+TZ=Europe/Oslo
+```
+
+3. **Start the container**:
+```bash
+docker-compose up -d
+```
+
+4. **View logs**:
+```bash
+# Container logs
+docker-compose logs -f
+
+# Call logs (if volume mounted)
+tail -f logs/morning_call.log
+tail -f logs/evening_call.log
+```
+
+5. **Stop the container**:
+```bash
+docker-compose down
+```
+
+### Unraid Setup
+
+1. In Unraid, go to **Docker** tab
+2. Click **Add Container**
+3. Fill in:
+   - **Name**: `accountability-buddy`
+   - **Repository**: Build from your cloned repo or use pre-built image
+   - **Environment Variables**: Add all required vars from `.env.docker`
+   - **Console Shell**: `bash`
+
+The container will automatically:
+- Clone the latest code from GitHub
+- Install dependencies
+- Set up cron jobs for morning and evening calls
+- Start running in the background
+
+### Customizing Call Times
+
+Call times use standard cron format: `minute hour day month weekday`
+
+Examples:
+- `0 8 * * *` - 8:00 AM every day
+- `30 7 * * 1-5` - 7:30 AM on weekdays only
+- `0 20 * * *` - 8:00 PM every day
+- `0 21 * * 0,6` - 9:00 PM on weekends only
+
+### Manual Scheduling (Non-Docker)
+
+If not using Docker, use cron directly:
 
 ```cron
 # Morning call at 8:00 AM
@@ -132,8 +187,12 @@ accountability_buddy/
 ├── make_morning_call.py    # Initiates morning accountability call
 ├── make_evening_call.py    # Updates evening assistant and makes call
 ├── check_morning_goals.py  # Displays structured output from last call
+├── setup.sh                # Container setup script
+├── Dockerfile              # Docker container definition
+├── docker-compose.yml      # Docker Compose configuration
 ├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variable template
+├── .env.example           # Environment variable template (local)
+├── .env.docker            # Environment variable template (Docker)
 ├── .gitignore            # Git ignore rules
 └── README.md             # This file
 ```

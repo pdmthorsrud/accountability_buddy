@@ -95,50 +95,59 @@ The easiest way to run this project is using Docker Compose. This automatically 
 
 ### Quick Start with Docker
 
-1. **Create a GitHub Personal Access Token** (for private repo access):
+1. **Create a directory for your deployment**:
+```bash
+mkdir accountability_buddy
+cd accountability_buddy
+```
+
+2. **Download the Docker files**:
+```bash
+# Download docker-compose.yml
+curl -O https://raw.githubusercontent.com/pdmthorsrud/accountability_buddy/main/docker-compose.yml
+
+# Download .env template
+curl -O https://raw.githubusercontent.com/pdmthorsrud/accountability_buddy/main/.env.template
+```
+
+3. **Create a GitHub Personal Access Token** (for private repo access):
    - Go to https://github.com/settings/tokens
    - Click "Generate new token" → "Generate new token (classic)"
    - Give it a name like "Accountability Buddy Docker"
    - Select scope: `repo` (Full control of private repositories)
    - Click "Generate token" and copy it
 
-2. **Clone the repository** (or pull it via Docker):
+4. **Create your environment file**:
 ```bash
-git clone https://github.com/pdmthorsrud/accountability_buddy.git
-cd accountability_buddy
+cp .env.template .env
 ```
 
-3. **Create environment file**:
-```bash
-cp .env.docker .env
-```
-
-Edit `.env` and fill in your actual values:
+Edit `.env` with your actual values:
 ```bash
 # GitHub token for private repo access
-GITHUB_TOKEN=ghp_your_github_token_here
+GITHUB_TOKEN=ghp_your_actual_github_token
 
 # Vapi configuration
-VAPI_API_TOKEN=your_actual_token
+VAPI_API_TOKEN=your_vapi_api_token
 MORNING_ASSISTANT_ID=your_morning_assistant_id
 EVENING_ASSISTANT_ID=your_evening_assistant_id
 PHONE_NUMBER_ID=your_phone_number_id
 TARGET_PHONE_NUMBER=+1234567890
 
-# Optional: Customize call times (cron format)
+# Call schedule (cron format)
 MORNING_CALL_TIME=0 8 * * *    # 8:00 AM
 EVENING_CALL_TIME=0 20 * * *   # 8:00 PM
 
-# Optional: Set your timezone
+# Timezone
 TZ=Europe/Oslo
 ```
 
-4. **Start the container**:
+5. **Start the container**:
 ```bash
 docker-compose up -d
 ```
 
-5. **View logs**:
+6. **View logs**:
 ```bash
 # Container logs
 docker-compose logs -f
@@ -148,23 +157,28 @@ tail -f logs/morning_call.log
 tail -f logs/evening_call.log
 ```
 
-6. **Stop the container**:
+7. **Stop the container**:
 ```bash
 docker-compose down
 ```
 
 ### Unraid Setup
 
-1. In Unraid, go to **Docker** tab
-2. Click **Add Container**
-3. Fill in:
-   - **Name**: `accountability-buddy`
-   - **Repository**: Build from your cloned repo or use pre-built image
-   - **Environment Variables**: Add all required vars from `.env.docker`
-   - **Console Shell**: `bash`
+1. Create a folder on your Unraid server (e.g., `/mnt/user/appdata/accountability_buddy/`)
+2. Download `docker-compose.yml` and `.env.template` to this folder
+3. Copy `.env.template` to `.env` and fill in your values (including GitHub token)
+4. In Unraid terminal, navigate to the folder and run:
+   ```bash
+   docker-compose up -d
+   ```
+
+Or use Unraid's Docker UI:
+1. Go to **Docker** tab → **Add Container**
+2. Set environment variables from your `.env` file
+3. Use the GitHub token in the build args
 
 The container will automatically:
-- Clone the latest code from GitHub
+- Clone the latest code from GitHub using your token
 - Install dependencies
 - Set up cron jobs for morning and evening calls
 - Start running in the background
@@ -202,8 +216,8 @@ accountability_buddy/
 ├── Dockerfile              # Docker container definition
 ├── docker-compose.yml      # Docker Compose configuration
 ├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variable template (local)
-├── .env.docker            # Environment variable template (Docker)
+├── .env.example           # Environment variable template (local dev)
+├── .env.template          # Environment variable template (Docker)
 ├── .gitignore            # Git ignore rules
 └── README.md             # This file
 ```

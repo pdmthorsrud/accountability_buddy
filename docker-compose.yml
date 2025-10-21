@@ -39,18 +39,10 @@ services:
         set -e
         apt-get update && apt-get install -y --no-install-recommends git &&
         cd /app &&
-        if [ ! -d .git ]; then
-          git init
-        fi &&
-        if git config remote.origin.url >/dev/null 2>&1; then
-          git remote set-url origin https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git
-        else
-          git remote add origin https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git
-        fi &&
-        if [ -z "$${GITHUB_BRANCH}" ]; then BRANCH=main; else BRANCH="$${GITHUB_BRANCH}"; fi &&
-        git fetch origin "$BRANCH" &&
-        git reset --hard "origin/$BRANCH" &&
-        git checkout -B "$BRANCH" "origin/$BRANCH" &&
+        REPO_NAME=$(basename \"$${GITHUB_REPO}\") &&
+        if [ -d \"$REPO_NAME\" ]; then rm -rf \"$REPO_NAME\"; fi &&
+        git clone https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git &&
+        cd \"$REPO_NAME\" &&
         chmod +x setup.sh &&
         ./setup.sh
       "

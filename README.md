@@ -101,7 +101,7 @@ mkdir accountability_buddy
 cd accountability_buddy
 ```
 
-2. **Download the Docker files**:
+2. **Download the required files**:
 ```bash
 # Download docker-compose.yml
 curl -O https://raw.githubusercontent.com/pdmthorsrud/accountability_buddy/main/docker-compose.yml
@@ -109,6 +109,8 @@ curl -O https://raw.githubusercontent.com/pdmthorsrud/accountability_buddy/main/
 # Download .env template
 curl -O https://raw.githubusercontent.com/pdmthorsrud/accountability_buddy/main/.env.template
 ```
+
+That's it! Just these 2 files are needed. The container will clone the full repo at runtime using your GitHub token.
 
 3. **Create a GitHub Personal Access Token** (for private repo access):
    - Go to https://github.com/settings/tokens
@@ -178,10 +180,13 @@ Or use Unraid's Docker UI:
 3. Use the GitHub token in the build args
 
 The container will automatically:
+- Install git and cron
 - Clone the latest code from GitHub using your token
-- Install dependencies
-- Set up cron jobs for morning and evening calls
+- Install Python dependencies
+- Set up cron jobs for morning and evening calls based on your configured times
 - Start running in the background
+
+**Note**: Each time the container restarts, it pulls the latest code from GitHub, so you're always running the newest version!
 
 ### Customizing Call Times
 
@@ -213,8 +218,7 @@ accountability_buddy/
 ├── make_evening_call.py    # Updates evening assistant and makes call
 ├── check_morning_goals.py  # Displays structured output from last call
 ├── setup.sh                # Container setup script
-├── Dockerfile              # Docker container definition
-├── docker-compose.yml      # Docker Compose configuration
+├── docker-compose.yml      # Docker Compose configuration (uses standard Python image)
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Environment variable template (local dev)
 ├── .env.template          # Environment variable template (Docker)

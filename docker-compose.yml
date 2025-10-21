@@ -2,14 +2,15 @@ version: '3.8'
 
 services:
   accountability-buddy:
-    build:
-      context: .
-      args:
-        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    image: python:3.9-slim
     container_name: accountability-buddy
     restart: unless-stopped
 
     environment:
+      # GitHub Configuration
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO:-pdmthorsrud/accountability_buddy}
+
       # Required: Vapi API Configuration
       - VAPI_API_TOKEN=${VAPI_API_TOKEN}
 
@@ -26,10 +27,20 @@ services:
       - MORNING_CALL_TIME=${MORNING_CALL_TIME:-0 8 * * *}
       - EVENING_CALL_TIME=${EVENING_CALL_TIME:-0 20 * * *}
 
+      # Timezone
+      - TZ=${TZ:-America/New_York}
+
     volumes:
       # Optional: Mount logs directory to access logs from host
       - ./logs:/var/log
 
-    # Set timezone (optional, adjust to your timezone)
-    environment:
-      - TZ=${TZ:-America/New_York}
+    command: >
+      bash -c "
+        apt-get update && apt-get install -y cron git &&
+        cd /app &&
+        git clone https://\$${GITHUB_TOKEN}@github.com/\$${GITHUB_REPO}.git . &&
+        chmod +x setup.sh &&
+        ./setup.sh
+      "
+
+    working_dir: /app

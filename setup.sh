@@ -96,5 +96,6 @@ else
     echo "❌ Some required variables are missing!"
     echo "Please check your .env file and try again."
     echo "=================================================="
+    sleep 600
     exit 1
 fi

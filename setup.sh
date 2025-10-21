@@ -1,101 +1,110 @@
 #!/bin/bash
 set -e
 
-echo "=================================================="
-echo "Accountability Buddy - Environment Variable Check"
-echo "=================================================="
-echo ""
+# Log file
+LOG_FILE="/var/log/setup_check.log"
 
-echo "GitHub Configuration:"
-echo "  GITHUB_TOKEN: ${GITHUB_TOKEN:0:10}... (${#GITHUB_TOKEN} chars total)"
-echo "  GITHUB_REPO: ${GITHUB_REPO}"
-echo ""
+# Function to log to both stdout and file
+log() {
+    echo "$1" | tee -a "$LOG_FILE"
+}
 
-echo "Vapi API Configuration:"
-echo "  VAPI_API_TOKEN: ${VAPI_API_TOKEN:0:10}... (${#VAPI_API_TOKEN} chars total)"
-echo ""
+log "=================================================="
+log "Accountability Buddy - Environment Variable Check"
+log "=================================================="
+log ""
 
-echo "Assistant IDs:"
-echo "  MORNING_ASSISTANT_ID: ${MORNING_ASSISTANT_ID}"
-echo "  EVENING_ASSISTANT_ID: ${EVENING_ASSISTANT_ID}"
-echo ""
+log "GitHub Configuration:"
+log "  GITHUB_TOKEN: ${GITHUB_TOKEN:0:10}... (${#GITHUB_TOKEN} chars total)"
+log "  GITHUB_REPO: ${GITHUB_REPO}"
+log ""
 
-echo "Phone Configuration:"
-echo "  PHONE_NUMBER_ID: ${PHONE_NUMBER_ID}"
-echo "  TARGET_PHONE_NUMBER: ${TARGET_PHONE_NUMBER}"
-echo ""
+log "Vapi API Configuration:"
+log "  VAPI_API_TOKEN: ${VAPI_API_TOKEN:0:10}... (${#VAPI_API_TOKEN} chars total)"
+log ""
 
-echo "Call Schedule:"
-echo "  MORNING_CALL_TIME: ${MORNING_CALL_TIME}"
-echo "  EVENING_CALL_TIME: ${EVENING_CALL_TIME}"
-echo ""
+log "Assistant IDs:"
+log "  MORNING_ASSISTANT_ID: ${MORNING_ASSISTANT_ID}"
+log "  EVENING_ASSISTANT_ID: ${EVENING_ASSISTANT_ID}"
+log ""
 
-echo "Timezone:"
-echo "  TZ: ${TZ}"
-echo ""
+log "Phone Configuration:"
+log "  PHONE_NUMBER_ID: ${PHONE_NUMBER_ID}"
+log "  TARGET_PHONE_NUMBER: ${TARGET_PHONE_NUMBER}"
+log ""
 
-echo "=================================================="
-echo "Checking for missing required variables..."
-echo "=================================================="
+log "Call Schedule:"
+log "  MORNING_CALL_TIME: ${MORNING_CALL_TIME}"
+log "  EVENING_CALL_TIME: ${EVENING_CALL_TIME}"
+log ""
+
+log "Timezone:"
+log "  TZ: ${TZ}"
+log ""
+
+log "=================================================="
+log "Checking for missing required variables..."
+log "=================================================="
 
 MISSING=0
 
 if [ -z "$GITHUB_TOKEN" ]; then
-    echo "❌ GITHUB_TOKEN is not set!"
+    log "❌ GITHUB_TOKEN is not set!"
     MISSING=1
 else
-    echo "✓ GITHUB_TOKEN is set"
+    log "✓ GITHUB_TOKEN is set"
 fi
 
 if [ -z "$VAPI_API_TOKEN" ]; then
-    echo "❌ VAPI_API_TOKEN is not set!"
+    log "❌ VAPI_API_TOKEN is not set!"
     MISSING=1
 else
-    echo "✓ VAPI_API_TOKEN is set"
+    log "✓ VAPI_API_TOKEN is set"
 fi
 
 if [ -z "$MORNING_ASSISTANT_ID" ]; then
-    echo "❌ MORNING_ASSISTANT_ID is not set!"
+    log "❌ MORNING_ASSISTANT_ID is not set!"
     MISSING=1
 else
-    echo "✓ MORNING_ASSISTANT_ID is set"
+    log "✓ MORNING_ASSISTANT_ID is set"
 fi
 
 if [ -z "$EVENING_ASSISTANT_ID" ]; then
-    echo "❌ EVENING_ASSISTANT_ID is not set!"
+    log "❌ EVENING_ASSISTANT_ID is not set!"
     MISSING=1
 else
-    echo "✓ EVENING_ASSISTANT_ID is set"
+    log "✓ EVENING_ASSISTANT_ID is set"
 fi
 
 if [ -z "$PHONE_NUMBER_ID" ]; then
-    echo "❌ PHONE_NUMBER_ID is not set!"
+    log "❌ PHONE_NUMBER_ID is not set!"
     MISSING=1
 else
-    echo "✓ PHONE_NUMBER_ID is set"
+    log "✓ PHONE_NUMBER_ID is set"
 fi
 
 if [ -z "$TARGET_PHONE_NUMBER" ]; then
-    echo "❌ TARGET_PHONE_NUMBER is not set!"
+    log "❌ TARGET_PHONE_NUMBER is not set!"
     MISSING=1
 else
-    echo "✓ TARGET_PHONE_NUMBER is set"
+    log "✓ TARGET_PHONE_NUMBER is set"
 fi
 
-echo ""
+log ""
 if [ $MISSING -eq 0 ]; then
-    echo "=================================================="
-    echo "✓ All required environment variables are set!"
-    echo "=================================================="
-    echo ""
-    echo "Container will stay running for 10 minutes for you to check logs..."
-    echo "Press Ctrl+C to exit early, or wait for auto-shutdown."
+    log "=================================================="
+    log "✓ All required environment variables are set!"
+    log "=================================================="
+    log ""
+    log "Log file saved to: $LOG_FILE"
+    log "Container will stay running for 10 minutes for you to check logs..."
+    log "Press Ctrl+C to exit early, or wait for auto-shutdown."
     sleep 600
 else
-    echo "=================================================="
-    echo "❌ Some required variables are missing!"
-    echo "Please check your .env file and try again."
-    echo "=================================================="
+    log "=================================================="
+    log "❌ Some required variables are missing!"
+    log "Please check your .env file and try again."
+    log "=================================================="
     sleep 600
     exit 1
 fi

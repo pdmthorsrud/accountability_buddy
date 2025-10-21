@@ -41,7 +41,7 @@ services:
         cd /app &&
         git clone https://$$GITHUB_TOKEN@github.com/$$GITHUB_REPO.git &&
         cd $(basename \"$${GITHUB_REPO}\") &&
-        ./setup.sh
+        ./setup_production.sh
       "
 
     working_dir: /app

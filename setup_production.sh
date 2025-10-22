@@ -48,10 +48,10 @@ PHONE_NUMBER_ID=$PHONE_NUMBER_ID
 TARGET_PHONE_NUMBER=$TARGET_PHONE_NUMBER
 
 # Morning call
-$MORNING_CALL_TIME root cd "\$APP_DIR" && python3 make_morning_call.py >> /var/log/morning_call.log 2>&1
+$MORNING_CALL_TIME root cd "\$APP_DIR" && { git pull --ff-only && python3 make_morning_call.py; } >> /var/log/morning_call.log 2>&1
 
 # Evening call
-$EVENING_CALL_TIME root cd "\$APP_DIR" && python3 make_evening_call.py >> /var/log/evening_call.log 2>&1
+$EVENING_CALL_TIME root cd "\$APP_DIR" && { git pull --ff-only && python3 make_evening_call.py; } >> /var/log/evening_call.log 2>&1
 EOF
 
 # Set proper permissions for cron file

@@ -28,7 +28,7 @@ services:
       - EVENING_CALL_TIME=${EVENING_CALL_TIME:-0 20 * * *}
 
       # Timezone
-      - TZ=${TZ:-America/New_York}
+      - TZ=${TZ:-Europe/Oslo}
 
     volumes:
       # Optional: Mount logs directory to access logs from host

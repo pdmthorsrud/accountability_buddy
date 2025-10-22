@@ -30,6 +30,13 @@ services:
       # Timezone
       - TZ=${TZ:-Europe/Oslo}
 
+      # Obsidian integration
+      - OBSIDIAN_ENABLED=${OBSIDIAN_ENABLED:-false}
+      - OBSIDIAN_REPO_URL=${OBSIDIAN_REPO_URL:-}
+      - OBSIDIAN_GITHUB_TOKEN=${OBSIDIAN_GITHUB_TOKEN:-}
+      - OBSIDIAN_GIT_USER_NAME=${OBSIDIAN_GIT_USER_NAME:-Accountability Buddy Bot}
+      - OBSIDIAN_GIT_USER_EMAIL=${OBSIDIAN_GIT_USER_EMAIL:-bot@accountability.local}
+
     volumes:
       # Optional: Mount logs directory to access logs from host
       - ./logs:/app/logs

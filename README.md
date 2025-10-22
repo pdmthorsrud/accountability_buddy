@@ -89,6 +89,51 @@ Automatically:
 python make_evening_call.py
 ```
 
+## Obsidian Integration (Optional)
+
+Accountability Buddy can mirror each day's check-ins into an Obsidian vault stored on GitHub. When enabled, every morning/evening script run will:
+
+1. Clone your vault into a temporary directory
+2. Write or update `Accountability/Daily Logs/{YYYY-MM-DD}-accountability.md`
+3. Ensure `Daily Notes/{YYYY-MM-DD}.md` embeds the daily log
+4. Commit and push the changes back to your vault
+5. Clean up the temporary directory once finished
+
+### Setup Steps
+
+1. Create a GitHub personal access token with `repo` scope (classic token works best).
+2. Add the following environment variables (locally or in `.env.template` for Docker):
+   - `OBSIDIAN_ENABLED=true`
+   - `OBSIDIAN_REPO_URL=https://github.com/yourusername/your-obsidian-vault.git`
+   - `OBSIDIAN_GITHUB_TOKEN=ghp_your_token`
+   - (Optional) `OBSIDIAN_GIT_USER_NAME` and `OBSIDIAN_GIT_USER_EMAIL` to override commit identity.
+3. Ensure your vault contains the directories `Accountability/Daily Logs/` and `Daily Notes/` (the scripts will create them if missing).
+
+### Example Output
+
+Morning calls create a page similar to:
+
+```markdown
+---
+date: "2025-02-05"
+morning_time: "2025-02-05T08:00:00"
+completion_rate: 0
+completed_goals: []
+---
+# Morning Accountability
+
+## Goals
+1. [ ] Write project brief
+2. [ ] 30-minute workout
+
+## Evening Review 🌙
+Evening Review 🌙 - *Pending...*
+```
+
+Evening calls update the same file by checking off completed goals, recording completion rate, and appending any reflections captured during the call. The daily note for the same date receives an embed (`![[2025-02-05-accountability]]`) under an **Accountability** section so the log appears alongside your other notes.
+
+> **Tip:** Leave `OBSIDIAN_ENABLED=false` to disable syncing without removing configuration.
+
 ## Docker Deployment (Recommended)
 
 The easiest way to run this project is using Docker Compose. This automatically sets up everything including cron jobs.

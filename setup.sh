@@ -45,6 +45,13 @@ log "Timezone:"
 log "  TZ: ${TZ}"
 log ""
 
+if command -v git >/dev/null 2>&1; then
+    log "Git version: $(git --version)"
+else
+    log "❌ git is not installed or not on PATH!"
+fi
+log ""
+
 log "=================================================="
 log "Checking for missing required variables..."
 log "=================================================="

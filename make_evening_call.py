@@ -1,10 +1,16 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from vapi import Vapi
 
 from obsidian_git_sync import ObsidianGitSync, ObsidianSync, parse_goals_from_vapi_output
+from vapi_polling import (
+    find_structured_call,
+    load_polling_configuration,
+    parse_vapi_datetime,
+    wait_for_structured_output,
+)
 
 # Load environment variables
 VAPI_API_TOKEN = os.environ.get("VAPI_API_TOKEN")
@@ -27,40 +33,7 @@ if not all(
 
 client = Vapi(token=VAPI_API_TOKEN)
 
-
-def _parse_vapi_datetime(timestamp: Optional[str]) -> Optional[datetime]:
-    if not timestamp:
-        return None
-    value = timestamp.replace("Z", "+00:00")
-    try:
-        return datetime.fromisoformat(value)
-    except ValueError:
-        return None
-
-
-def _get_customer_number(call: object) -> Optional[str]:
-    customer = getattr(call, "customer", None)
-    if not customer:
-        return None
-    if isinstance(customer, dict):
-        return customer.get("number")
-    return getattr(customer, "number", None)
-
-
-def _find_latest_structured_call(assistant_id: str) -> Optional[object]:
-    calls_list = client.calls.list()
-    for entry in calls_list:
-        if (
-            _get_customer_number(entry) == TARGET_PHONE_NUMBER
-            and getattr(entry, "assistant_id", None) == assistant_id
-            and getattr(entry, "status", None) == "ended"
-        ):
-            full_call = client.calls.get(id=entry.id)
-            artifact = getattr(full_call, "artifact", None)
-            structured_outputs = getattr(artifact, "structured_outputs", {}) if artifact else {}
-            if structured_outputs:
-                return full_call
-    return None
+poll_interval, timeout_delta, tolerance_delta = load_polling_configuration()
 
 
 def _build_evening_prompt(goals_text: str) -> str:
@@ -180,9 +153,15 @@ def _sync_evening_to_obsidian(
 
 
 # ---------------------------------------------------------------------
-# Locate the latest morning call with structured outputs (for context)
+# Locate today's morning call with structured outputs (for context)
 
-morning_call = _find_latest_structured_call(MORNING_ASSISTANT_ID)
+morning_call = find_structured_call(
+    client,
+    assistant_id=MORNING_ASSISTANT_ID,
+    target_number=TARGET_PHONE_NUMBER,
+    base_time=datetime.now(timezone.utc),
+    time_tolerance=None,
+)
 
 if not morning_call:
     print(f"No successful morning calls with structured outputs found for {TARGET_PHONE_NUMBER}")
@@ -254,7 +233,15 @@ else:
     print("Using updated evening assistant with morning goals")
 
     # Attempt to sync the most recent completed evening call to Obsidian
-    evening_call = _find_latest_structured_call(EVENING_ASSISTANT_ID)
+    evening_call = wait_for_structured_output(
+        client,
+        assistant_id=EVENING_ASSISTANT_ID,
+        target_number=TARGET_PHONE_NUMBER,
+        base_time=datetime.now(timezone.utc),
+        poll_interval=poll_interval,
+        timeout=timeout_delta,
+        time_tolerance=tolerance_delta,
+    )
     if evening_call:
         evening_artifact = getattr(evening_call, "artifact", None)
         evening_outputs = (
@@ -262,10 +249,13 @@ else:
         )
         completed_flags, reflections_text = _parse_evening_results(evening_outputs, goals_list)
         call_timestamp = (
-            _parse_vapi_datetime(getattr(evening_call, "ended_at", None))
-            or _parse_vapi_datetime(getattr(evening_call, "started_at", None))
-            or datetime.now()
+            parse_vapi_datetime(getattr(evening_call, "ended_at", None))
+            or parse_vapi_datetime(getattr(evening_call, "started_at", None))
+            or datetime.now(timezone.utc)
         )
         _sync_evening_to_obsidian(goals_list, completed_flags, call_timestamp, reflections_text)
     else:
-        print("No previous evening call with structured outputs found; skipping Obsidian update.")
+        print(
+            "No evening structured output available within the configured timeout; "
+            "skipping Obsidian update for now."
+        )

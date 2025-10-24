@@ -5,13 +5,20 @@ from typing import Optional
 from vapi import Vapi
 
 from obsidian_git_sync import ObsidianGitSync, ObsidianSync, parse_goals_from_vapi_output
-from vapi_polling import load_polling_configuration, parse_vapi_datetime, wait_for_structured_output
+from vapi_polling import (
+    cron_reference_time,
+    load_polling_configuration,
+    parse_vapi_datetime,
+    wait_for_structured_output,
+)
 
 # Load environment variables
 VAPI_API_TOKEN = os.environ.get("VAPI_API_TOKEN")
 MORNING_ASSISTANT_ID = os.environ.get("MORNING_ASSISTANT_ID")
 PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
 TARGET_PHONE_NUMBER = os.environ.get("TARGET_PHONE_NUMBER")
+VAPI_SKIP_OUTBOUND_CALL = os.environ.get("VAPI_SKIP_OUTBOUND_CALL", "false").lower() == "true"
+MORNING_CALL_TIME = os.environ.get("MORNING_CALL_TIME")
 
 # Validate required environment variables
 if not all([VAPI_API_TOKEN, MORNING_ASSISTANT_ID, PHONE_NUMBER_ID, TARGET_PHONE_NUMBER]):
@@ -23,17 +30,20 @@ client = Vapi(token=VAPI_API_TOKEN)
 print("Initiating morning call...")
 print("=" * 50)
 
-call = client.calls.create(
-    assistant_id=MORNING_ASSISTANT_ID,
-    phone_number_id=PHONE_NUMBER_ID,
-    customer={"number": TARGET_PHONE_NUMBER},
-)
+if VAPI_SKIP_OUTBOUND_CALL:
+    print("VAPI_SKIP_OUTBOUND_CALL=true; skipping outbound call creation for testing.")
+else:
+    call = client.calls.create(
+        assistant_id=MORNING_ASSISTANT_ID,
+        phone_number_id=PHONE_NUMBER_ID,
+        customer={"number": TARGET_PHONE_NUMBER},
+    )
 
-print(f"\nMorning call initiated successfully!")
-print(f"Call ID: {call.id}")
-print(f"Status: {call.status}")
-print(f"Calling: {TARGET_PHONE_NUMBER}")
-print(f"Using morning accountability assistant")
+    print(f"\nMorning call initiated successfully!")
+    print(f"Call ID: {call.id}")
+    print(f"Status: {call.status}")
+    print(f"Calling: {TARGET_PHONE_NUMBER}")
+    print(f"Using morning accountability assistant")
 
 
 def _sync_morning_to_obsidian(call_with_outputs: Optional[object]) -> None:
@@ -81,7 +91,7 @@ def _sync_morning_to_obsidian(call_with_outputs: Optional[object]) -> None:
 
 
 poll_interval, timeout_delta, tolerance_delta = load_polling_configuration()
-base_time = datetime.now(timezone.utc)
+base_time = cron_reference_time(MORNING_CALL_TIME) or datetime.now(timezone.utc)
 
 structured_call = wait_for_structured_output(
     client,

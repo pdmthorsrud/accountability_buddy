@@ -8,11 +8,16 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 
-def parse_vapi_datetime(timestamp: Optional[str]) -> Optional[datetime]:
-    """Parse an ISO 8601 timestamp from Vapi into a timezone-aware datetime."""
+def parse_vapi_datetime(timestamp: Optional[object]) -> Optional[datetime]:
+    """Parse a Vapi timestamp (string or datetime) into a timezone-aware datetime."""
     if not timestamp:
         return None
-    value = timestamp.replace("Z", "+00:00")
+    if isinstance(timestamp, datetime):
+        parsed = timestamp
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
+    value = str(timestamp).replace("Z", "+00:00")
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError:
@@ -179,6 +184,42 @@ def load_polling_configuration(
 
     tolerance_delta = timedelta(minutes=tolerance_minutes)
     return poll_interval, timeout_delta, tolerance_delta
+
+
+def cron_reference_time(
+    cron_expression: Optional[str],
+    *,
+    now: Optional[datetime] = None,
+) -> Optional[datetime]:
+    """Return the most recent scheduled time from a cron expression."""
+    if not cron_expression:
+        return None
+
+    parts = cron_expression.strip().split()
+    if len(parts) < 2:
+        return None
+
+    minute_field, hour_field = parts[0], parts[1]
+
+    try:
+        # Support simple numeric values, optionally separated by commas (use the first value).
+        minute = int(minute_field.split(",")[0])
+        hour = int(hour_field.split(",")[0])
+    except ValueError:
+        return None
+
+    if not (0 <= minute <= 59 and 0 <= hour <= 23):
+        return None
+
+    reference_local = (now or datetime.now(timezone.utc)).astimezone()
+    scheduled_local = reference_local.replace(
+        hour=hour, minute=minute, second=0, microsecond=0
+    )
+
+    if scheduled_local > reference_local:
+        scheduled_local -= timedelta(days=1)
+
+    return scheduled_local.astimezone(timezone.utc)
 
 
 def find_structured_call(

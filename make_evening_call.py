@@ -6,6 +6,7 @@ from vapi import Vapi
 
 from obsidian_git_sync import ObsidianGitSync, ObsidianSync, parse_goals_from_vapi_output
 from vapi_polling import (
+    cron_reference_time,
     find_structured_call,
     load_polling_configuration,
     parse_vapi_datetime,
@@ -18,6 +19,9 @@ MORNING_ASSISTANT_ID = os.environ.get("MORNING_ASSISTANT_ID")
 EVENING_ASSISTANT_ID = os.environ.get("EVENING_ASSISTANT_ID")
 PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
 TARGET_PHONE_NUMBER = os.environ.get("TARGET_PHONE_NUMBER")
+VAPI_SKIP_OUTBOUND_CALL = os.environ.get("VAPI_SKIP_OUTBOUND_CALL", "false").lower() == "true"
+MORNING_CALL_TIME = os.environ.get("MORNING_CALL_TIME")
+EVENING_CALL_TIME = os.environ.get("EVENING_CALL_TIME")
 
 # Validate required environment variables
 if not all(
@@ -155,12 +159,13 @@ def _sync_evening_to_obsidian(
 # ---------------------------------------------------------------------
 # Locate today's morning call with structured outputs (for context)
 
+morning_anchor = cron_reference_time(MORNING_CALL_TIME)
 morning_call = find_structured_call(
     client,
     assistant_id=MORNING_ASSISTANT_ID,
     target_number=TARGET_PHONE_NUMBER,
-    base_time=datetime.now(timezone.utc),
-    time_tolerance=None,
+    base_time=morning_anchor,
+    time_tolerance=tolerance_delta,
 )
 
 if not morning_call:
@@ -220,24 +225,28 @@ else:
     print("Initiating evening call...")
     print("=" * 50)
 
-    new_call = client.calls.create(
-        assistant_id=EVENING_ASSISTANT_ID,
-        phone_number_id=PHONE_NUMBER_ID,
-        customer={"number": TARGET_PHONE_NUMBER},
-    )
+    if VAPI_SKIP_OUTBOUND_CALL:
+        print("VAPI_SKIP_OUTBOUND_CALL=true; skipping outbound evening call creation for testing.")
+    else:
+        new_call = client.calls.create(
+            assistant_id=EVENING_ASSISTANT_ID,
+            phone_number_id=PHONE_NUMBER_ID,
+            customer={"number": TARGET_PHONE_NUMBER},
+        )
 
-    print(f"\nEvening call initiated successfully!")
-    print(f"Call ID: {new_call.id}")
-    print(f"Status: {new_call.status}")
-    print(f"Calling: {TARGET_PHONE_NUMBER}")
-    print("Using updated evening assistant with morning goals")
+        print(f"\nEvening call initiated successfully!")
+        print(f"Call ID: {new_call.id}")
+        print(f"Status: {new_call.status}")
+        print(f"Calling: {TARGET_PHONE_NUMBER}")
+        print("Using updated evening assistant with morning goals")
 
     # Attempt to sync the most recent completed evening call to Obsidian
+    evening_anchor = cron_reference_time(EVENING_CALL_TIME) or datetime.now(timezone.utc)
     evening_call = wait_for_structured_output(
         client,
         assistant_id=EVENING_ASSISTANT_ID,
         target_number=TARGET_PHONE_NUMBER,
-        base_time=datetime.now(timezone.utc),
+        base_time=evening_anchor,
         poll_interval=poll_interval,
         timeout=timeout_delta,
         time_tolerance=tolerance_delta,

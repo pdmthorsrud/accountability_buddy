@@ -1,3 +1,5 @@
+flowchart TD
+Start --> Stop
 ```mermaid
 %% Accountability Buddy execution flow
 flowchart TD
